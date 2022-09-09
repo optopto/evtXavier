@@ -23,7 +23,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-
 SOURCES += \
         main.cpp \
         mainxavierevt.cpp \
@@ -31,16 +30,34 @@ SOURCES += \
     configure.cpp \
     ger.cpp \
     diroption.cpp \
-    capturedata.cpp
+    capturedata.cpp \
+    gpuinfo.cpp
 
 HEADERS += \
         mainxavierevt.h \
     configure.h \
-    emergent.h
+    emergent.h \
+    globalvar.h
 
 FORMS += \
         mainxavierevt.ui \
     configure.ui
+
+
+
+CUDA_SOURCES = cuda_test.cu
+CUDA_DIR = /usr/local/cuda
+CUDA_ARCH = sm_32 # as supported by the Tegra K1
+INCLUDEPATH += $$CUDA_DIR/include
+LIBS += -L $$CUDA_DIR/lib64 -lcudart -lcuda
+osx: LIBS += -F/Library/Frameworks -framework CUDA
+cuda.commands = $$CUDA_DIR/bin/nvcc -c -arch=$$CUDA_ARCH -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+cuda.dependency_type = TYPE_C
+cuda.depend_command = $$CUDA_DIR/bin/nvcc -M ${QMAKE_FILE_NAME}
+cuda.input = CUDA_SOURCES
+cuda.output = ${QMAKE_FILE_BASE}_cuda.o
+
+QMAKE_EXTRA_COMPILERS += cuda
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../opt/EVT/eSDK/lib/release/ -lEmergentCamera
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../opt/EVT/eSDK/lib/debug/ -lEmergentCamera
@@ -110,3 +127,11 @@ else:unix: LIBS += -L$$PWD/../../../../../usr/lib/aarch64-linux-gnu/ -lopencv_ml
 
 INCLUDEPATH += $$PWD/../../../../../usr/lib/aarch64-linux-gnu
 DEPENDPATH += $$PWD/../../../../../usr/lib/aarch64-linux-gnu
+
+DISTFILES +=
+
+
+
+
+
+

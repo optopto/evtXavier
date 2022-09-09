@@ -1,6 +1,6 @@
 #ifndef MAINXAVIEREVT_H
 #define MAINXAVIEREVT_H
-
+#include <fstream>
 #include <QImage>
 #include <QString>
 #include <QMessageBox>
@@ -10,44 +10,34 @@
 #include <QThread>
 #include <QtMath>
 #include <QtCore>
-
 #include "unistd.h"
 #include <thread>
-
 #include "configure.h"
-
-
+#include "cuda.h"
+#include "cuda_runtime.h"
 #define MAX_CAMERAS 2
-#define BUFFPREVIEW 2
+#define BUFFPREVIEW 12
 #define SUCCESS 0
 #define FIXEDBUFFER 300
 #define BUFFCAPTURE 200
-
-
 namespace Ui {
 class mainXavierEvt;
 }
-
 class mainXavierEvt : public QMainWindow
 {
     Q_OBJECT
-
 public:
     explicit mainXavierEvt(QWidget *parent = 0);
     ~mainXavierEvt();
     void on_actionConfiguration_triggered();
     void createQtDir(int frame_rate, int camM);
     void worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int cameraWork);
-
-
-
 public slots:
     void setExposure(int);
     void setGain(int);
     void setRoi(int);
     void setTime(int);
     void setFrameRate(int);
-
 private slots:
     void on_checkBox_clicked(bool checked);
     void on_checkBox2_clicked(bool checked);
@@ -57,14 +47,18 @@ private slots:
     void configureCamFunc();
     void on_actionSave_Directory_triggered();
     void on_actionCapture_triggered();
+    void on_pushButton_clicked();
+    void on_pushButton_4_clicked();
 
 private:
     Ui::mainXavierEvt *ui;
     CEmergentFrame evtFrame[BUFFPREVIEW];
+    CEmergentFrame evtFrame_[BUFFPREVIEW];
     struct GigEVisionDeviceInfo deviceInfo[MAX_CAMERAS];
     CEmergentCamera camera[MAX_CAMERAS];
     QString path;
     QImage images[2];
+    QImage imagenGPU;
     QLabel *labelsCam[2];
     QCheckBox *checkCam[2];
     int CAMERAS = 0;
@@ -72,7 +66,7 @@ private:
     configure *confWin = new configure;
     int gain = 200;
     int exposure = 500;
-    int roi = 0;
+    int roi = 50;
     int global_roi_x_1 = 0;
     int global_roi_y_1 = 0;
     int global_roi_h_1 = 616;
@@ -85,13 +79,18 @@ private:
     bool config = false;
     bool config_ = false;
     int maxExposure = 0;
-    QStringList save_directory = QStringList("/home/pc/");
+    QStringList save_directory = QStringList("/home/nvxv/Pictures");
     QString exist;
     bool d1 = false;
     bool d2 = false;
     QThread *camThread[2];
     int time_ = 0;
     int frame_rate = 0;
+    bool instant = false;
+    Mat fullImage[2];
+    Mat fullI[2];
+    bool zoom_cam1 = false;
+    bool zoom_cam2 = false;
 
 };
 

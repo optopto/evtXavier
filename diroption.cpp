@@ -1,14 +1,12 @@
 #include "mainxavierevt.h"
 #include "ui_mainxavierevt.h"
-
 void mainXavierEvt::on_actionSave_Directory_triggered()
 {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::Directory);
-    dialog.setDirectory("/home/pc");
+    dialog.setDirectory("/home/nvxv/Pictures");
     if (dialog.exec()){save_directory = dialog.selectedFiles();}
     ui->label_dir_save->setText(save_directory[0]);
-
 }
 
 void mainXavierEvt::createQtDir(int frame_rate, int camM){

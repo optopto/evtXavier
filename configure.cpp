@@ -1,9 +1,7 @@
 #include "configure.h"
 #include "ui_configure.h"
-
 int getMaxGain(CEmergentCamera* camera);
 int getMaxExposure(CEmergentCamera* camera);
-
 configure::configure(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::configure)
@@ -14,9 +12,15 @@ configure::configure(QWidget *parent) :
     unsigned int listcam_buf_size = MAX_CAMERAS;
     unsigned int count;
     EVT_ListDevices(configure_info, &listcam_buf_size, &count);
-    EVT_CameraOpen(&configure_cam[0], &configure_info[0]);
-    ui->exposureSlider->setMaximum(getMaxExposure(&configure_cam[0]));
-    ui->gainSlider->setMaximum(getMaxGain(&configure_cam[0]));
+    if(count > 0){
+        EVT_CameraOpen(&configure_cam[0], &configure_info[0]);
+        ui->exposureSlider->setMaximum(getMaxExposure(&configure_cam[0]));
+        ui->gainSlider->setMaximum(getMaxGain(&configure_cam[0]));}
+    else if(count == 0){
+        ui->exposureSlider->setMaximum(30000);
+        ui->gainSlider->setMaximum(8000);
+        std::cout << "NO HAY CAMARAS CONECTADAS" << std::endl;
+    }
     ui->exposureSlider->setValue(1000);
     ui->gainSlider->setValue(300);
     EVT_CameraClose(&configure_cam[0]);
@@ -27,8 +31,6 @@ configure::configure(QWidget *parent) :
     connect(ui->leGain,&QLineEdit::returnPressed,this,&configure::leGain);
     connect(ui->leRoi,&QLineEdit::returnPressed,this,&configure::leRoi);
     connect(ui->sendParam,&QPushButton::clicked,this,&configure::sendParam);
-
-
 }
 
 configure::~configure()

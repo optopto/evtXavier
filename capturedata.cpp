@@ -1,21 +1,14 @@
 #include "mainxavierevt.h"
 #include "ui_mainxavierevt.h"
-
 void configure_defaults(CEmergentCamera* camera);
 int getH(CEmergentCamera* camera);
 int getW(CEmergentCamera* camera);
 QString dir_save_files;
-
 void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int cameraWork)
 {   unsigned int we1 = 0;
     unsigned int he1 = 0;
     we1 = getW(cam_p);
     he1 = getH(cam_p);
-    CEmergentAVIFile videoBuffer;
-    videoBuffer.fps=60;
-    videoBuffer.codec = EVT_CODEC_NONE;
-    videoBuffer.width = we1;
-    videoBuffer.height = he1;
     EVT_ERROR err = EVT_SUCCESS;
     bool buffer_used = false, buffer_recd = false;
     CEmergentFrame p_frms[FIXEDBUFFER];
@@ -23,15 +16,12 @@ void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int c
     int frame_count = 0;
     int dropped_frames = 0;
     unsigned short id_prev= 0;
-    bool  done_ = false;
+    bool done_ = false;
     int save_frame = 0;
     QString file_number;
     QString file_number_;
     file_number = QString(dir_save_files + "%1/").arg(cameraWork+1);
-    file_number_ = QString(file_number + "my_video_%1.avi").arg(cameraWork+1);
     string file_name = file_number_.toStdString();
-    strcpy(videoBuffer.fileName,file_name.c_str());
-    EVT_AVIOpen(&videoBuffer);
     int frames = 0;
     int rep = 0;
     for (frames = 0; frames < FIXEDBUFFER; frames++)
@@ -72,14 +62,13 @@ void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int c
         buffer_used = true;
         if (frame_count >= frame_to_recv){done_ = true;}
         if (!buffer_recd) continue;
-        if (save_frame == 200-1){
-            for (save_frame = 0; save_frame < 200; save_frame++) {
-                // char filename[100];
-                /* file_number_ = QString(file_number + "%1.tiff").arg((200*rep)+save_frame+1);
+        if (save_frame == 10-1){
+            for (save_frame = 0; save_frame < 10; save_frame++) {
+                char filename[100];
+                file_number_ = QString(file_number + "%1.tiff").arg((10*rep)+save_frame+1);
                 string file_name = file_number_.toStdString();
                 strcpy(filename,file_name.c_str());
-                EVT_FrameSave(&evtFrameRecv[save_frame], filename, EVT_FILETYPE_TIF, EVT_ALIGN_NONE);*/
-                EVT_AVIAppend(&videoBuffer,&evtFrameRecv[save_frame]);
+                EVT_FrameSave(&evtFrameRecv[save_frame], filename, EVT_FILETYPE_TIF, EVT_ALIGN_NONE);
                 }
             rep++;
             save_frame = -1;
@@ -87,7 +76,6 @@ void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int c
         }
         save_frame++;
     }
-    EVT_AVIClose(&videoBuffer);
     for (frames = 0; frames < FIXEDBUFFER; frames++){EVT_ReleaseFrameBuffer(cam_p, &p_frms[frames]);}
 
     while ((d1 || d2 ) == true) {
@@ -95,7 +83,7 @@ void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int c
         if (cameraWork == 1 || CAMERAS < 2) {d2 = false;}
     }
 
-    //EVT_CameraClose(cam_p);
+    EVT_CameraClose(cam_p);
     return ;
 }
 
@@ -103,21 +91,17 @@ void mainXavierEvt::worker_thread(CEmergentCamera *cam_p,int frame_to_recv,int c
 
 void mainXavierEvt::on_actionCapture_triggered()
 {
+    cameraOn = false;
     int frame_to_recv = time_*frame_rate;
     createQtDir(frame_rate,CAMERAS);
     dir_save_files = exist;
     for(int cam=0 ;cam < CAMERAS; cam++){
         EVT_CameraSetUInt32Param(&camera[cam], "FrameRate", frame_rate);
     }
-
     int cam = 0;
-
-    //for (int cam = 0; cam < CAMERAS; cam++){
-        std::thread capture_(&mainXavierEvt::worker_thread,this,&camera[0],frame_to_recv,cam);
-        std::thread capture_2(&mainXavierEvt::worker_thread,this,&camera[1],frame_to_recv,cam+1);
-        capture_.join();
-        capture_2.join();
-    //}
-
+    std::thread capture_(&mainXavierEvt::worker_thread,this,&camera[0],frame_to_recv,cam);
+    //std::thread capture_2(&mainXavierEvt::worker_thread,this,&camera[1],frame_to_recv,cam+1);
+    capture_.join();
+   // capture_2.join();
     return;
 }
